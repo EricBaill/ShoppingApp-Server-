@@ -1,0 +1,11 @@
+log/
+*.db
+**/__pycache__
+**/.vscode
+.venv
+**/d.*
+test/
+tools/
+README.md
+TODO.md
+s/
