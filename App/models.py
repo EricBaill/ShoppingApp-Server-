@@ -9,12 +9,9 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128),nullable=False)
     phone = db.Column(db.String(11),nullable=False,unique=True)
-    pwd = db.Column(db.String(128),nullable=False)
-    is_super = db.Column(db.Integer,default=0,nullable=False)
+    head_img = db.Column(db.String(255),nullable=False,default='http://soft1906.xin/head_img.jpeg')
     create_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    update_at = db.Column(db.DateTime, nullable=False, default=datetime.now,onupdate=datetime.now())
 
 #=管理员表
 class Admin(db.Model):

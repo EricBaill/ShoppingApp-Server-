@@ -9,7 +9,7 @@ from App.apis.AdminLoginApi import AdminLogin
 from App.apis.AlipayApi import Pay
 from App.apis.CancelOrderApi import CancelOrder
 from App.apis.CommendApi import CommendResource, CommendResource1
-from App.apis.LoginApi import LoginResource
+from App.apis.LoginApi import Login
 from App.apis.OrdersApi import OrderResource, OrderResource1, OrderResource2, OrderResource3, OrderResource4, \
     OrderResource5
 from App.apis.ProDetailsApi import ProDetails, ProDetails1, ProDetails3, ProDetails2
@@ -34,7 +34,7 @@ def init_apis(app):
 #用户注册
 api.add_resource(RegisterResource,'/api/users/')
 #用户登录
-api.add_resource(LoginResource,'/api/user_login/')
+api.add_resource(Login,'/api/user/login/')
 
 #地址
 #用户地址查询
