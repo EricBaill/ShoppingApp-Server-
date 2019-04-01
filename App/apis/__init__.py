@@ -1,118 +1,98 @@
-# -*- coding: utf-8 -*-
-
 from flask_restful import Api
 
-from App.apis.AProductsApi import AdminPro, AdminPro1, AdminPro2
-from App.apis.AddressApi import AddrResource, AddrResource1
-from App.apis.AdminApi import AdminResource, AdminResource1
-from App.apis.AdminLoginApi import AdminLogin
+from App.apis.AddressApi import AddAddress, PutAddress, GetAddress, DelAddress
 from App.apis.AlipayApi import Pay
-from App.apis.CancelOrderApi import CancelOrder
-from App.apis.CommendApi import CommendResource, CommendResource1
+from App.apis.AsynApi import Asyn
+from App.apis.ConfirmApi import Confirm
 from App.apis.LoginApi import Login
-from App.apis.OrdersApi import OrderResource, OrderResource1, OrderResource2, OrderResource3, OrderResource4, \
-    OrderResource5
-from App.apis.ProDetailsApi import ProDetails, ProDetails1, ProDetails3, ProDetails2
-from App.apis.Product_classesApi import Pro_classesResource, Pro_classesResource1
-from App.apis.ProductionsApi import ProductinsResource, ProductinsResource1
-from App.apis.ReceivedApi import Received
-from App.apis.RegisterApi import RegisterResource
-from App.apis.ResultApi import Result
-from App.apis.SaveOrderApi import SaveOrder
-from App.apis.SearchProductApi import SearchProductResource
-from App.apis.SucessPayApi import SucessPayResource
-from App.apis.UploadFileApi import Upload
-from App.apis.UserApi import UserResource, UserResource1
-from App.apis.YibuApi import YibuResource
-from App.apis.shopCartApi import ShopCartResource
+from App.apis.OrderApi import GetOrder_, DelOrder_, addOrder_, GetOrder_01, DelOrder_01
+from App.apis.ProClsApi import ProductionCls, GetProcls, delProcls, PutProcls
+from App.apis.ProductionApi import Productin_, PutProductin, ProInfos, DelProductin, Productin_1
+from App.apis.ShopCartApi import ShopCart_, GetShopCart, DelShopCart, AddShopCart, CutShopCart
+from App.apis.UserApi import GetUser, PutUser, delUser
 
 api = Api()
+
 #需要注意  api的初始化 要和init方法联系 否则无法初始化
+
 def init_apis(app):
+
     api.init_app(app=app)
 
-#用户注册
-api.add_resource(RegisterResource,'/api/users/')
+
 #用户登录
 api.add_resource(Login,'/api/user/login/')
 
-#地址
-#用户地址查询
-api.add_resource(AddrResource,'/api/address/<int:user_id>/')
-#用户地址添加
-api.add_resource(AddrResource1,'/api/address/')
 
-#商品
-#查询和添加商品
-api.add_resource(ProductinsResource,'/api/productions/')
-
-#管理端
-api.add_resource(AdminPro,'/api/admin/productions/')
-api.add_resource(AdminPro1,'/api/admin/productions/<id>/')
-api.add_resource(AdminPro2,'/api/admin/productions/shelf/')
-
-api.add_resource(ProDetails,'/api/productions/details/')
-api.add_resource(ProDetails1,'/api/productions/details/<user_id>/')
-api.add_resource(ProDetails2,'/api/production/add/<pro_id>/user/<user_id>/')
-api.add_resource(ProDetails3,'/api/production/delete/<pro_id>/user/<user_id>/')
-#修改商品信息
-api.add_resource(ProductinsResource1,'/api/productions/<int:production_id>/')
-#搜索商品
-api.add_resource(SearchProductResource,'/api/search/')
-
-#管理员
-#查询和添加管理员信息
-api.add_resource(AdminResource,'/api/admin_users/')
-
-api.add_resource(AdminLogin,'/api/admin/login/')
+#获取用户信息
+api.add_resource(GetUser,'/api/user/infos/')
+#编辑用户信息
+api.add_resource(PutUser,'/api/put/user/<id>/')
+#删除用户信息
+api.add_resource(delUser,'/api/delete/user/<id>/')
 
 
-#修改、删除管理员信息
-api.add_resource(AdminResource1,'/api/admin_users/<int:user_id>/')
+#获取，添加商品分类
+api.add_resource(ProductionCls,'/api/add/get/procls/')
+#编辑商品分类
+api.add_resource(PutProcls,'/api/put/procls/<id>/')
+#删除商品分类
+api.add_resource(delProcls,'/api/delete/procls/<id>/')
+#获取某一分类下的所有商品信息
+api.add_resource(GetProcls,'/api/get/class/pros/<cls_id>/')
 
-#获取和添加商品类别
-api.add_resource(Pro_classesResource,'/api/product_classes/')
-api.add_resource(Pro_classesResource1,'/api/product_classes/delete/<id>/')
 
-#订单
-#获取用户订单信息
-api.add_resource(OrderResource,'/api/order/<int:user_id>/')
-#修改订单
-api.add_resource(OrderResource1,'/api/orders/<int:order_id>/')
-api.add_resource(OrderResource2,'/api/orders/status/')
+#获取，添加商品列表
+api.add_resource(Productin_,'/api/productions/')
+api.add_resource(Productin_1,'/api/commend/productions/')
+#获取商品详情
+api.add_resource(ProInfos,'/api/production/info/<id>/')
+#修改商品
+api.add_resource(PutProductin,'/api/put/production/<id>/')
+#删除商品
+api.add_resource(DelProductin,'/api/del/production/<id>/')
 
-api.add_resource(OrderResource3,'/api/orders/list/')
-api.add_resource(OrderResource4,'/api/orders/month/list/')
+
+#购物车添加
+api.add_resource(ShopCart_,'/api/add/shop/cart/')
+#获取购物车信息
+api.add_resource(GetShopCart,'/api/get/shop/carts/<user_id>/')
+#删除购物车
+api.add_resource(DelShopCart,'/api/del/shop/<user_id>/cart/<id>/')
+#计算添加购物车商品数量
+api.add_resource(AddShopCart,'/api/add/number/shopcart/')
+#计算减少购物车商品数量
+api.add_resource(CutShopCart,'/api/cut/number/shopcart/')
+
+
+#添加地址
+api.add_resource(AddAddress,'/api/add/address/')
+#获取用户地址
+api.add_resource(GetAddress,'/api/get/address/<user_id>/')
+#用户编辑地址
+api.add_resource(PutAddress,'/api/put/address/<add_id>/user/<user_id>/')
+#用户删除地址
+api.add_resource(DelAddress,'/api/del/address/<add_id>/user/<user_id>/')
+
+
+#提交订单进行支付
+api.add_resource(Pay,'/api/alipay/')
+#获取订单信息
+api.add_resource(GetOrder_,'/api/get/orders/<user_id>/')
+#获取订单详情
+api.add_resource(GetOrder_01,'/api/get/orders/infos/<order_id>/')
+#取消订单
+api.add_resource(DelOrder_,'/api/cancel/order/<id>/')
+#删除订单
+api.add_resource(DelOrder_01,'/api/delete/order/<order_id>/')
 #添加订单
-# api.add_resource(OrderResource5,'/api/order/')
+api.add_resource(addOrder_,'/api/add/order/')
 
-#查询和添加购物车
-api.add_resource(ShopCartResource,'/api/cart/')
-
-#支付宝支付
-api.add_resource(SucessPayResource,'/api/sucesspay/')
-api.add_resource(Pay,'/api/pay/')
-api.add_resource(SaveOrder,'/api/save/order/')
-api.add_resource(CancelOrder,'/api/cancel/order/<id>/')
-
-api.add_resource(Received,'/api/isreceived/<id>/')
+#
+api.add_resource(Confirm,'/api/confirm/receipt/<order_id>/')
 
 
 
-api.add_resource(YibuResource,'/api/yibu/')
-api.add_resource(Result,'/api/<result>/')
-
-
-
-api.add_resource(UserResource,'/api/user/info/')
-api.add_resource(UserResource1,'/api/user/address/<id>/')
-api.add_resource(OrderResource5,'/api/order/send/')
-
-#推荐商品
-api.add_resource(CommendResource,'/api/iscommend/')
-api.add_resource(CommendResource1,'/api/iscommend/<id>/')
-
-
-api.add_resource(Upload,'/api/upload/old/')
-
-
+#支付宝异步回调
+# api.add_resource(Asyn,'/api/asynchronous/')
+api.add_resource(Asyn,'/api/yibu/')

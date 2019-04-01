@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-
 from flask import Flask
 from flask_cors import CORS
 
 from App import settings
 from App.apis import init_apis
 from App.ext import init_ext
+
 
 def create_app(ENV_NAME):
     app = Flask(__name__)
@@ -16,4 +15,5 @@ def create_app(ENV_NAME):
     app.config['JSON_AS_ASCII'] = False
     init_ext(app)
     init_apis(app)
+    # init_cache(app)
     return app

@@ -3,8 +3,7 @@ from flask_restful import Resource, reqparse
 from App.models import User, db
 
 parser = reqparse.RequestParser()
-parser.add_argument(name='phone',type=str,required=True,help='请填写手机号')
-
+parser.add_argument(name='phone',type=str)
 
 class Login(Resource):
     def post(self):
@@ -12,11 +11,20 @@ class Login(Resource):
         phone = parse.get('phone')
         u = User.query.filter(User.phone==phone).first()
         if u:
-            return jsonify({'msg':'登录成功！'})
+            data = {
+                'id': u.id,
+                'phone': u.phone
+            }
+            return jsonify(data)
+
         else:
             user = User()
             user.phone = phone
-            user.head_img = 'http://soft1906.xin/head_img.jpeg'
             db.session.add(user)
             db.session.commit()
-            return jsonify({'msg':'登录成功！'})
+            u = User.query.filter(User.phone==phone).first()
+            data = {
+                'id':u.id,
+                'phone':phone
+            }
+            return jsonify(data)

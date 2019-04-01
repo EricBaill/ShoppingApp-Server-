@@ -1,82 +1,137 @@
+# -*- coding: utf-8 -*-
 from flask import jsonify
-from flask_restful import reqparse, Resource, fields, marshal_with
-from App.models import User, db, Desc
+from flask_restful import Resource, reqparse
 
-parser = reqparse.RequestParser()
-parser.add_argument(name='id',type=int,required=True,help='用户id不能为空')
-parser.add_argument(name='name',type=str,required=True,help='用户名不能为空')
-parser.add_argument(name='province',type=str,required=True,help='省份不能为空')
-parser.add_argument(name='city',type=str,required=True,help='城市不能为空')
-parser.add_argument(name='area',type=str,required=True,help='地区不能为空')
-parser.add_argument(name='linkman',type=str,required=True,help='联系人不能为空')
-parser.add_argument(name='link_phone',type=str,required=True,help='联系人手机号不能为空')
-parser.add_argument(name='is_default',type=bool)
-parser.add_argument(name='detail',type=str)
+from App.models import Address, db
 
-desc_fields = {
-    'id': fields.Integer,
-    'province': fields.String,
-    'city': fields.String,
-    'area': fields.String,
-    'detail': fields.String,
-    'is_default': fields.Boolean,
-    'linkman': fields.String,
-    'link_phone': fields.String,
-}
-
-user_fields = {
-    'id': fields.Integer,
-    'name': fields.String,
-    'phone': fields.String,
-}
-
-users_fields = {
-    'create_at': fields.DateTime,
-    'update_at': fields.DateTime,
-}
-
-results_fields = {
-    'code': fields.String,
-    'message': fields.String,
-    'address': fields.Nested(user_fields),
-    'desc': fields.Nested(desc_fields),
-    'date': fields.Nested(users_fields),
-}
-
-class AddrResource(Resource):
-    @marshal_with(results_fields)
+class GetAddress(Resource):
     def get(self,user_id):
-        user = User.query.filter(User.id.__eq__(user_id)).all()
-        desc = Desc.query.filter(Desc.user_id.__eq__(user_id)).all()
-        if user:
-            return {'code': '200', 'address': user,'desc':desc,'date': user}
+        list_ = []
+        addresss = Address.query.filter(Address.user_id==user_id,Address.status==0).all()
+        if addresss:
+            for address in addresss:
+                data = {
+                    'id':address.id,
+                    'receiver':address.linkman,
+                    'phone':address.tel,
+                    'details':address.detail,
+                    'isDefault':address.is_default
+                }
+                list_.append(data)
+            return jsonify(list_)
         else:
-            return {'code': '404', 'message': '暂无任何信息！'}
+            return jsonify([])
 
-
-class AddrResource1(Resource):
+class AddAddress(Resource):
     def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(name='user_id', type=int)
+        parser.add_argument(name='receiver', type=str)
+        parser.add_argument(name='phone', type=str)
+        parser.add_argument(name='details', type=str)
+        parser.add_argument(name='isDefault', type=int)
         parse = parser.parse_args()
-        id = parse.get('id')
-        province = parse.get('province')
-        city = parse.get('city')
-        area = parse.get('area')
-        detail = parse.get('detail')
-        linkman = parse.get('linkman')
-        link_phone = parse.get('link_phone')
-        is_default = parse.get('is_default')
-        desc = Desc()
-        desc.province = province
-        desc.city = city
-        desc.area = area
-        desc.detail = detail
-        desc.linkman = linkman
-        desc.link_phone = link_phone
-        desc.user_id = id
-        desc.is_default = is_default
-        try:
-            db.session.add(desc)
+        user_id = parse.get('user_id')
+        linkman = parse.get('receiver')
+        tel = parse.get('phone')
+        detail = parse.get('details')
+        is_default = parse.get('isDefault')
+        addres = Address.query.all()
+        if is_default == 1:
+            if addres:
+                for addre in addres:
+                    if addre.is_default == 1:
+                        addre.is_default = 0
+                        db.session.commit()
+                    else:
+                        pass
+
+                address = Address()
+                address.user_id = user_id
+                address.linkman = linkman
+                address.tel = tel
+                address.detail = detail
+                address.is_default = is_default
+                db.session.add(address)
+                db.session.commit()
+                return jsonify({'msg':'添加成功！'})
+            else:
+                address = Address()
+                address.user_id = user_id
+                address.linkman = linkman
+                address.tel = tel
+                address.detail = detail
+                address.is_default = is_default
+                db.session.add(address)
+                db.session.commit()
+                return jsonify({'msg': '添加成功！'})
+
+        elif is_default == 0:
+            address = Address()
+            address.user_id = user_id
+            address.linkman = linkman
+            address.tel = tel
+            address.detail = detail
+            address.is_default = is_default
+            db.session.add(address)
             db.session.commit()
-        except Exception as e:
-            print(str(e))
-        return jsonify({'msg':'ok','code':'200'})
+            return jsonify({'msg': '添加成功！'})
+
+
+
+class PutAddress(Resource):
+    def put(self,user_id,add_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument(name='receiver', type=str)
+        parser.add_argument(name='phone', type=str)
+        parser.add_argument(name='details', type=str)
+        parser.add_argument(name='isDefault', type=int)
+        parse = parser.parse_args()
+        linkman = parse.get('receiver')
+        tel = parse.get('phone')
+        detail = parse.get('details')
+        is_default = parse.get('isDefault')
+
+        address = Address.query.filter(Address.user_id==user_id,Address.id==add_id).first()
+        addres = Address.query.all()
+        if address:
+            if is_default == 1:
+                if addres:
+                    for addre in addres:
+                        if addre.is_default == 1:
+                            addre.is_default = 0
+                            db.session.commit()
+                        else:
+                            pass
+
+                    address.user_id = user_id
+                    address.linkman = linkman
+                    address.tel = tel
+                    address.detail = detail
+                    address.is_default = is_default
+                    db.session.commit()
+                    return jsonify({'msg':'编辑成功！'})
+                else:
+                    return jsonify({})
+
+            elif is_default == 0:
+                address.user_id = user_id
+                address.linkman = linkman
+                address.tel = tel
+                address.detail = detail
+                address.is_default = is_default
+                db.session.commit()
+                return jsonify({'msg': '编辑成功！'})
+        else:
+            return jsonify({})
+
+
+class DelAddress(Resource):
+    def get(self,user_id,add_id):
+        address = Address.query.filter(Address.user_id==user_id,Address.id==add_id).first()
+        if address:
+            address.status = 1
+            db.session.commit()
+            return jsonify({'msg':'删除成功！'})
+        else:
+            return jsonify({})

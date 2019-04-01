@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 def get_database_uri(DATABASE):
     dialect = DATABASE.get('dialect') or 'mysql'
     mysql = DATABASE.get('mysql') or 'pymysql'
@@ -17,11 +15,6 @@ class Config():
     SECRET_KEY = '110'
     # SESSION_TYPE = 'redis'
     SQLALCHEMY_TRACK_MODIFICATIONS=False
-
-    UPLOAD_FOLDER = "/s/static"
-    THUMBNAIL_FOLDER = "/s/thumb"
-    UPLOADS_DEFAULT_URL = 'http://127.0.0.1:5000/'
-
 
 class DevelopConfing(Config):
     DEBUG = True
