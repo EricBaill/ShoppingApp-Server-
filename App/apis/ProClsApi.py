@@ -2,7 +2,7 @@
 from flask import jsonify
 from flask_restful import Resource, reqparse
 
-from App.models import ProCls, db, Productions
+from App.models import ProCls, db, Productions, ShopCart
 
 parser = reqparse.RequestParser()
 
@@ -33,6 +33,7 @@ class ProductionCls(Resource):
         db.session.commit()
         return jsonify({'msg':'添加成功！'})
 
+
 class PutProcls(Resource):
     def put(self,id):
         parse = parser.parse_args()
@@ -49,10 +50,23 @@ class PutProcls(Resource):
         else:
             return jsonify({})
 
+
 class delProcls(Resource):
     def delete(self,id):
         procls = ProCls.query.filter(ProCls.id==id).first()
         if procls:
+            pros = Productions.query.filter(Productions.class_id==procls.id).all()
+            if pros:
+                for pro in pros:
+                    carts = ShopCart.query.filter(ShopCart.pro_id == pro.id).all()
+                    if carts:
+                        for cart in carts:
+                            db.session.delete(cart)
+                    else:
+                        pass
+                    db.session.delete(pro)
+            else:
+                pass
             db.session.delete(procls)
             db.session.commit()
             return jsonify({'msg':'删除成功！'})
@@ -72,7 +86,6 @@ class GetProcls(Resource):
                     'name':procls.name,
                     'prods':{
                         'id':pro.id,
-                        'name':pro.name,
                         'price':pro.price,
                         'old_price':pro.old_price,
                         'stock':pro.stock,
@@ -101,4 +114,4 @@ class GetProcls(Resource):
                     k['prods'] = list_k
             return jsonify(list2)
         else:
-            return jsonify([])
+            return jsonify({})

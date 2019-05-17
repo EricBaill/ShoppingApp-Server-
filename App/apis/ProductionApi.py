@@ -1,6 +1,6 @@
 from flask import jsonify
 from flask_restful import reqparse, Resource
-from App.models import Productions, db, ProCls
+from App.models import Productions, db, ProCls, ShopCart
 
 parser = reqparse.RequestParser()
 
@@ -18,7 +18,6 @@ class Productin_(Resource):
                         'class_name':pro_class.name,
                         'foods':{
                             'id':production.id,
-                            'name':production.name,
                             'price':production.price,
                             'old_price':production.old_price,
                             'stock':production.stock,
@@ -49,7 +48,6 @@ class Productin_(Resource):
         return jsonify(list2)
 
     def post(self):
-        parser.add_argument(name='name', type=str, required=True, help='商品名不能为空')
         parser.add_argument(name='price', type=float)
         parser.add_argument(name='old_price', type=float)
         parser.add_argument(name='stock', type=str)
@@ -58,9 +56,8 @@ class Productin_(Resource):
         parser.add_argument(name='content', type=str)
         parser.add_argument(name='class_id', type=int)
         parse = parser.parse_args()
-        name = parse.get('name')
         price = parse.get('price')
-        old_price = parse.get('price')
+        old_price = parse.get('old_price')
         stock = parse.get('stock')
         title = parse.get('title')
         cover_img = parse.get('cover_img')
@@ -68,7 +65,6 @@ class Productin_(Resource):
         class_id = parse.get('class_id')
 
         pro = Productions()
-        pro.name = name
         pro.price = price
         pro.old_price = old_price
         pro.stock = stock
@@ -76,13 +72,11 @@ class Productin_(Resource):
         pro.cover_img = cover_img
         pro.content = content
         pro.class_id = class_id
-        try:
-            db.session.add(pro)
-            db.session.commit()
-        except Exception as e:
-            print(str(e))
+        db.session.add(pro)
+        db.session.commit()
 
-        pro_class = ProCls.query.filter(ProCls.id.__eq__(class_id)).first()
+        # pro_class = ProCls.query.filter(ProCls.id.__eq__(class_id)).first()
+        return jsonify({'msg':'添加成功'})
 
 
 class Productin_1(Resource):
@@ -93,7 +87,6 @@ class Productin_1(Resource):
             for production in productions:
                 data = {
                     'id': production.id,
-                    'name': production.name,
                     'price': production.price,
                     'stock': production.stock,
                     'title': production.title,
@@ -107,40 +100,33 @@ class Productin_1(Resource):
 
 class PutProductin(Resource):
     def put(self,id):
-        parser.add_argument(name='class_name', type=str)
-        parser.add_argument(name='name', type=str)
         parser.add_argument(name='price', type=float)
-        parser.add_argument(name='old_price', type=float)
         parser.add_argument(name='stock', type=str)
         parser.add_argument(name='title', type=str)
         parser.add_argument(name='cover_img', type=str)
         parser.add_argument(name='content', type=str)
         parser.add_argument(name='class_id', type=int)
         parse = parser.parse_args()
-        name = parse.get('name')
         price = parse.get('price')
-        old_price = parse.get('price')
         stock = parse.get('stock')
         title = parse.get('title')
         cover_img = parse.get('cover_img')
         content = parse.get('content')
         class_id = parse.get('class_id')
+        print(cover_img)
+        print(content)
         productions = Productions.query.filter(Productions.id==id).first()
         if productions:
-            pro = Productions()
-            pro.name = name
-            pro.price = price
-            pro.old_price = old_price
-            pro.stock = stock
-            pro.title = title
-            pro.cover_img = cover_img
-            pro.content = content
-            pro.class_id = class_id
-            try:
-                db.session.add(pro)
-                db.session.commit()
-            except Exception as e:
-                print(str(e))
+            productions.price = price
+            productions.stock = stock
+            productions.title = title
+            productions.cover_img = cover_img
+            productions.content = content
+            productions.class_id = class_id
+            db.session.commit()
+            return jsonify({'msg':'成功'})
+        else:
+            return jsonify({})
 
 
 class ProInfos(Resource):
@@ -155,7 +141,6 @@ class ProInfos(Resource):
                     data = {
                         'class_id': production.class_id,
                         'id': production.id,
-                        'name': production.name,
                         'price': production.price,
                         'old_price': production.old_price,
                         'stock': production.stock,
@@ -164,7 +149,6 @@ class ProInfos(Resource):
                         'content': production.content,
                         'sameProducts':{
                             'id': pro.id,
-                            'name': pro.name,
                             'price': pro.price,
                             'old_price': pro.old_price,
                             'stock': pro.stock,
@@ -195,12 +179,63 @@ class ProInfos(Resource):
         else:
             return jsonify({})
 
+
 class DelProductin(Resource):
     def delete(self,id):
         pro = Productions.query.filter(Productions.id==id).first()
         if pro:
+            carts = ShopCart.query.filter(ShopCart.pro_id == pro.id).all()
+            if carts:
+                for cart in carts:
+                    db.session.delete(cart)
+            else:
+                pass
             db.session.delete(pro)
             db .session.commit()
             return jsonify({'msg':'删除成功'})
+        else:
+            return jsonify({})
+
+
+class getPros(Resource):
+    def get(self):
+        list_ = []
+        pros = Productions.query.all()
+        if pros:
+            for pro in pros:
+                procls = ProCls.query.filter(ProCls.id == pro.class_id).first()
+                if procls:
+                    data = {
+                        'id': pro.id,
+                        'price': pro.price,
+                        'old_price': pro.old_price,
+                        'stock': pro.stock,
+                        'title': pro.title,
+                        'cover_img': pro.cover_img,
+                        'content': pro.content,
+                        'commend': pro.commend,
+                        'cls':{
+                            'class_id': procls.id,
+                            'class_name': procls.name,
+                        }
+                    }
+                    list_.append(data)
+            return jsonify(list_)
+        else:
+            return jsonify([])
+
+
+class proCommend(Resource):
+    def get(self,id):
+        pro = Productions.query.filter(Productions.id==id).first()
+        if pro:
+            if pro.commend == 0:
+                pro.commend = 1
+            elif pro.commend == 1:
+                pro.commend = 0
+            else:
+                pass
+            db.session.commit()
+            return jsonify({'msg':'成功'})
         else:
             return jsonify({})

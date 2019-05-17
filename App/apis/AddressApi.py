@@ -2,7 +2,8 @@
 from flask import jsonify
 from flask_restful import Resource, reqparse
 
-from App.models import Address, db
+from App.models import Address, db, Orders, ShopCart
+
 
 class GetAddress(Resource):
     def get(self,user_id):
@@ -21,6 +22,7 @@ class GetAddress(Resource):
             return jsonify(list_)
         else:
             return jsonify([])
+
 
 class AddAddress(Resource):
     def post(self):
@@ -78,7 +80,6 @@ class AddAddress(Resource):
             return jsonify({'msg': '添加成功！'})
 
 
-
 class PutAddress(Resource):
     def put(self,user_id,add_id):
         parser = reqparse.RequestParser()
@@ -130,6 +131,18 @@ class DelAddress(Resource):
     def get(self,user_id,add_id):
         address = Address.query.filter(Address.user_id==user_id,Address.id==add_id).first()
         if address:
+            orders = Orders.query.filter(Orders.address_id==address.id).all()
+            carts = ShopCart.query.filter(ShopCart.address_id==address.id).all()
+            if orders:
+                for order in orders:
+                    db.session.delete(order)
+            else:
+                pass
+            if carts:
+                for cart in carts:
+                    db.session.delete(cart)
+            else:
+                pass
             address.status = 1
             db.session.commit()
             return jsonify({'msg':'删除成功！'})

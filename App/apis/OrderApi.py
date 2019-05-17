@@ -4,7 +4,7 @@ import time
 from flask import jsonify
 from flask_restful import Resource, reqparse
 
-from App.models import Orders, Productions, db, Address
+from App.models import Orders, Productions, db, Address, User
 
 
 class addOrder_(Resource):
@@ -52,9 +52,9 @@ class GetOrder_(Resource):
                             'order_id':order.id,
                             'status':order.status,
                             'sumprice':order.sumprice,
+                            'is_send':order.is_send,
                             'orderProdArr':{
                                 'id':pro.id,
-                                'name':pro.name,
                                 'price':pro.price,
                                 'old_price':pro.old_price,
                                 'stock':pro.stock,
@@ -64,9 +64,7 @@ class GetOrder_(Resource):
                                 'counts':count,
                             }
                         }
-                    else:
-                        pass
-                    list_.append(data)
+                        list_.append(data)
             list2 = []
             for i in range(len(list_)):
                 if list_[i] != {}:
@@ -106,6 +104,7 @@ class GetOrder_01(Resource):
                         'status': order.status,
                         'sumprice': order.sumprice,
                         'number': order.code,
+                        'is_send': order.is_send,
                         'create_at': order.create_at.strftime('%Y/%m/%d'),
                         'address':{
                             'id':address.id,
@@ -116,7 +115,6 @@ class GetOrder_01(Resource):
                         },
                         'orderProdArr': {
                             'id': pro.id,
-                            'name': pro.name,
                             'price': pro.price,
                             'old_price': pro.old_price,
                             'stock': pro.stock,
@@ -126,9 +124,7 @@ class GetOrder_01(Resource):
                             'counts': count,
                         }
                     }
-                else:
-                    pass
-                list_.append(data)
+                    list_.append(data)
             list2 = []
             for i in range(len(list_)):
                 if list_[i] != {}:
@@ -161,6 +157,7 @@ class DelOrder_(Resource):
         else:
             return jsonify({})
 
+
 class DelOrder_01(Resource):
     def get(self,order_id):
         order = Orders.query.filter(Orders.id == order_id).first()
@@ -170,3 +167,145 @@ class DelOrder_01(Resource):
             return jsonify({'msg': '删除成功'})
         else:
             return jsonify({})
+
+
+class getOrders_(Resource):
+    def get(self):
+        orders = Orders.query.all()
+        list_ = []
+        if orders:
+            for order in orders:
+                address = Address.query.filter(Address.id==order.address_id).first()
+                pros = eval(order.products)
+                print(address)
+                for i in range(len(pros)):
+                    pro_id = pros[i]['id']
+                    count = pros[i]['count']
+                    pro = Productions.query.filter(Productions.id == pro_id).first()
+                    if pro:
+                        data = {
+                            'order_id': order.id,
+                            'status': order.status,
+                            'sumprice': order.sumprice,
+                            'number': order.code,
+                            'is_send': order.is_send,
+                            'create_at': order.create_at.strftime('%Y/%m/%d'),
+                            'address':{
+                                'id':address.id,
+                                'details':address.detail,
+                                'isDefault':address.is_default,
+                                'phone':address.tel,
+                                'receiver':address.linkman
+                            },
+                            'orderProdArr': {
+                                'id': pro.id,
+                                'price': pro.price,
+                                'old_price': pro.old_price,
+                                'stock': pro.stock,
+                                'title': pro.title,
+                                'cover_img': pro.cover_img,
+                                'content': pro.content,
+                                'counts': count,
+                            }
+                        }
+                        list_.append(data)
+            list2 = []
+            for i in range(len(list_)):
+                if list_[i] != {}:
+                    order_list = []
+                    order_list.append(list_[i].get('orderProdArr'))
+                    for j in range(i + 1, len(list_)):
+                        if list_[i].get('order_id') == list_[j].get('order_id'):
+                            order_list.append(list_[j].get('orderProdArr'))
+                            list_[i]['orderProdArr'] = order_list
+                            list_[j] = {}
+
+                    list2.append(list_[i])
+            for k in list2:
+                if isinstance(k['orderProdArr'], dict):
+                    list_k = []
+                    list_k.append(k['orderProdArr'])
+                    k['orderProdArr'] = list_k
+            return jsonify(list2)
+        else:
+            return jsonify([])
+
+
+class isSend(Resource):
+    def get(self,id):
+        order = Orders.query.filter(Orders.id==id).first()
+        if order:
+            order.is_send = 1
+            db.session.commit()
+            return jsonify({'msg':'已发货'})
+        else:
+            return jsonify({})
+
+
+class searchTelOrder(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(name='phone', type=str)
+        parse = parser.parse_args()
+        phone = parse.get('phone')
+        list_ = []
+        address = Address.query.filter(Address.tel==phone).first()
+        if address:
+            orders = Orders.query.filter(Orders.address_id==address.id).all()
+            for order in orders:
+                address = Address.query.filter(Address.id == order.address_id).first()
+                pros = eval(order.products)
+                for i in range(len(pros)):
+                    pro_id = pros[i]['id']
+                    count = pros[i]['count']
+                    pro = Productions.query.filter(Productions.id == pro_id).first()
+                    if pro:
+                        data = {
+                            'order_id': order.id,
+                            'status': order.status,
+                            'sumprice': order.sumprice,
+                            'number': order.code,
+                            'is_send': order.is_send,
+                            'create_at': order.create_at.strftime('%Y/%m/%d'),
+                            'address': {
+                                'id': address.id,
+                                'details': address.detail,
+                                'isDefault': address.is_default,
+                                'phone': address.tel,
+                                'receiver': address.linkman
+                            },
+                            'orderProdArr': {
+                                'id': pro.id,
+                                'price': pro.price,
+                                'old_price': pro.old_price,
+                                'stock': pro.stock,
+                                'title': pro.title,
+                                'cover_img': pro.cover_img,
+                                'content': pro.content,
+                                'counts': count,
+                            }
+                        }
+                        list_.append(data)
+            list2 = []
+            for i in range(len(list_)):
+                if list_[i] != {}:
+                    order_list = []
+                    order_list.append(list_[i].get('orderProdArr'))
+                    for j in range(i + 1, len(list_)):
+                        if list_[i].get('order_id') == list_[j].get('order_id'):
+                            order_list.append(list_[j].get('orderProdArr'))
+                            list_[i]['orderProdArr'] = order_list
+                            list_[j] = {}
+
+                    list2.append(list_[i])
+            for k in list2:
+                if isinstance(k['orderProdArr'], dict):
+                    list_k = []
+                    list_k.append(k['orderProdArr'])
+                    k['orderProdArr'] = list_k
+            return jsonify(list2)
+        else:
+            return jsonify([])
+
+
+

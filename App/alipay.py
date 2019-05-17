@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-# from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256
 from urllib.parse import quote_plus
@@ -125,8 +124,8 @@ app_private_key_path = os.path.join(os.path.dirname(__file__),'./private-key.pem
 alipay_public_key_path = os.path.join(os.path.dirname(__file__),'./public-key.pem')
 
 alipay = AliPay(
-    appid="2016091900549422",  # 设置签约的appid
-    app_notify_url="http://39.104.82.180:8002/api/yibu/",  #线上地址 异步支付通知url
+    appid="2018112062214560",  # 设置签约的appid
+    app_notify_url="http://47.111.16.81:8003/api/yibu/",  #线上地址 异步支付通知url
     app_private_key_path=app_private_key_path,  # 设置应用私钥
     alipay_public_key_path=alipay_public_key_path,  # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
     debug=True,  # 默认False,            # 设置是否是沙箱环境，True是沙箱环境
